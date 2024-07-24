@@ -1,7 +1,5 @@
 #include <functional>
 #include <iostream>
-#include <memory>
-#include <random>
 
 void print_tabs(int count) {
     for (int i = 0; i < count; i++) {
@@ -10,31 +8,11 @@ void print_tabs(int count) {
 }
 
 template<typename T>
-class BinarySearchTree {
-public:
-    BinarySearchTree() : root{nullptr} {}
-
-    void insert(T value);
-
-    T* find(std::function<bool (T const&)> pred);
-    T* find(T const& value);
-    T const* find(T const& value) const;
-
-    void print() const;
-
+class BinarySearchTree final {
 private:
     struct Node {
         template <typename... Args>
         Node(Args... args) : value{args...}, left_child{nullptr}, right_child{nullptr} {}
-
-        template <typename... Args>
-        static std::unique_ptr<Node> make(Args... args) {
-            return std::make_unique<Node>(args...);
-        }
-
-        static std::unique_ptr<Node> make(T value, T left, T right) {
-            return { value, left, right };
-        }
 
         void print_with_indent(int indent) const {
             print_tabs(indent);
@@ -55,47 +33,68 @@ private:
                 std::cout << "<no right node>" << std::endl;
             }
         }
+
+        Node* delete_elem(T const& value);
         
         T value;
 
-        std::unique_ptr<Node> left_child;
-        std::unique_ptr<Node> right_child;
+        Node* left_child;
+        Node* right_child;
     };
 
-    std::unique_ptr<Node> root;
+public:
+    BinarySearchTree() : root{nullptr} {}
+
+    void insert(T value);
+
+    T* find(std::function<bool (T const&)> pred);
+    T* find(T const& value);
+    T const* find(T const& value) const;
+
+    Node* delete_element(T const& value);
+
+    void print() const;
+
+    ~BinarySearchTree() = default;
+
+private:
+    Node* root;
 };
 
+// TODO: find a better way to do this
 template <typename T>
 void BinarySearchTree<T>::insert(T value) {
+    auto* new_node = new Node(value);
+    
     if (!root) {
-        root = Node::make(value);
+        root = new_node;
         return;
     }
 
     Node* prev = nullptr;
-    auto* current = root.get();
+    auto* current = root;
     while (current) {
         if (value <= current->value) {
             prev = current;
-            current = current->left_child.get();
+            current = current->left_child;
             continue;
         }
 
         prev = current;
-        current = current->right_child.get();
+        current = current->right_child;
     }
 
     if (value <= prev->value) {
-        prev->left_child = Node::make(value);
+        prev->left_child = new_node;
         return;
     }
 
-    prev->right_child = Node::make(value);
+    prev->right_child = new_node;
 }
 
 template <typename T>
 T* BinarySearchTree<T>::find(T const& value) {
-    auto* current = root.get();
+    auto* current = root;
 
     while (current) {
         if (current->value == value) {
@@ -103,11 +102,11 @@ T* BinarySearchTree<T>::find(T const& value) {
         }
 
         if (current->value < value) {
-            current = current->right_child.get();
+            current = current->right_child;
             continue;
         }
 
-        current = current->left_child.get();
+        current = current->left_child;
     }
 
     return nullptr;
@@ -115,7 +114,7 @@ T* BinarySearchTree<T>::find(T const& value) {
 
 template <typename T>
 T const* BinarySearchTree<T>::find(T const& value) const {
-    auto* current = root.get();
+    auto* current = root;
 
     while (current) {
         if (current->value == value) {
@@ -123,14 +122,71 @@ T const* BinarySearchTree<T>::find(T const& value) const {
         }
 
         if (current->value < value) {
-            current = current->right_child.get();
+            current = current->right_child;
             continue;
         }
 
-        current = current->left_child.get();
+        current = current->left_child;
     }
 
     return nullptr;
+}
+
+template <typename T>
+typename BinarySearchTree<T>::Node* BinarySearchTree<T>::delete_element(T const& value) {
+    return root = root->delete_elem(value);
+}
+
+template <typename T>
+typename BinarySearchTree<T>::Node* BinarySearchTree<T>::Node::delete_elem(T const& value) {
+    if (!this) {
+        return nullptr;
+    }
+    
+    if (value < this->value) {
+        left_child = left_child->delete_elem(value);
+        return this;
+    }
+
+    if (value > this->value) {
+        right_child = right_child->delete_elem(value);
+        return this;
+    }
+
+    if (!(left_child || right_child)) {
+        delete this;
+    }
+
+    if (!left_child) {
+        auto* right = right_child;
+        delete this;
+        return right;
+    }
+
+    if (!right_child) {
+        auto* left = left_child;
+        delete this;
+        return left;
+    }
+
+    auto* parent = this;
+    auto* succ = parent->right_child;
+    while (succ->left_child) {
+        parent = succ;
+        succ = parent->left_child;
+    }
+
+    this->value = succ->value;
+
+    if (parent->left_child == succ) {
+        parent->left_child = succ->right_child;
+    } else {
+        parent->right_child = succ->right_child;
+    }
+
+    delete succ;
+
+    return this;
 }
 
 template <typename T>
@@ -143,6 +199,7 @@ void BinarySearchTree<T>::print() const {
 
 int main() {
     BinarySearchTree<int> bst{};
+
     bst.insert(0);
     bst.insert(0);
     bst.insert(1);
@@ -153,6 +210,10 @@ int main() {
     bst.insert(5);
     bst.insert(6);
     bst.insert(69);
+
+    bst.print();
+
+    bst.delete_element(7);
 
     bst.print();
 }
