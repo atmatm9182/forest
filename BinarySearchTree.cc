@@ -34,6 +34,18 @@ private:
             }
         }
 
+        void free() {
+            if (left_child) {
+                left_child->free();
+            }
+
+            if (right_child) {
+                right_child->free();
+            }
+
+            delete this;
+        }
+
         Node* delete_elem(T const& value);
         
         T value;
@@ -55,7 +67,17 @@ public:
 
     void print() const;
 
-    ~BinarySearchTree() = default;
+    ~BinarySearchTree() {
+        if (root->left_child) {
+            root->left_child->free();
+        }
+
+        if (root->right_child) {
+            root->right_child->free();
+        }
+
+        delete root;
+    }
 
 private:
     Node* root;
