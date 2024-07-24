@@ -84,7 +84,6 @@ private:
     Node* root;
 };
 
-// TODO: find a better way to do this
 template <std::totally_ordered T>
 void BinarySearchTree<T>::insert(T value) {
     auto* new_node = new Node(value);
