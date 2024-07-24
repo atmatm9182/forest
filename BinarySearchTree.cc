@@ -1,5 +1,6 @@
 #include <functional>
 #include <iostream>
+#include <concepts>
 
 void print_tabs(int count) {
     for (int i = 0; i < count; i++) {
@@ -7,8 +8,8 @@ void print_tabs(int count) {
     }
 }
 
-template<typename T>
-class BinarySearchTree final {
+template<std::totally_ordered T>
+class BinarySearchTree {
 private:
     struct Node {
         template <typename... Args>
@@ -84,7 +85,7 @@ private:
 };
 
 // TODO: find a better way to do this
-template <typename T>
+template <std::totally_ordered T>
 void BinarySearchTree<T>::insert(T value) {
     auto* new_node = new Node(value);
     
@@ -114,7 +115,7 @@ void BinarySearchTree<T>::insert(T value) {
     prev->right_child = new_node;
 }
 
-template <typename T>
+template <std::totally_ordered T>
 T* BinarySearchTree<T>::find(T const& value) {
     auto* current = root;
 
@@ -134,7 +135,7 @@ T* BinarySearchTree<T>::find(T const& value) {
     return nullptr;
 }
 
-template <typename T>
+template <std::totally_ordered T>
 T const* BinarySearchTree<T>::find(T const& value) const {
     auto* current = root;
 
@@ -154,12 +155,12 @@ T const* BinarySearchTree<T>::find(T const& value) const {
     return nullptr;
 }
 
-template <typename T>
+template <std::totally_ordered T>
 typename BinarySearchTree<T>::Node* BinarySearchTree<T>::delete_element(T const& value) {
     return root = root->delete_elem(value);
 }
 
-template <typename T>
+template <std::totally_ordered T>
 typename BinarySearchTree<T>::Node* BinarySearchTree<T>::Node::delete_elem(T const& value) {
     if (!this) {
         return nullptr;
@@ -211,7 +212,7 @@ typename BinarySearchTree<T>::Node* BinarySearchTree<T>::Node::delete_elem(T con
     return this;
 }
 
-template <typename T>
+template <std::totally_ordered T>
 void BinarySearchTree<T>::print() const {
     if (root) {
         std::cout << "root: ";

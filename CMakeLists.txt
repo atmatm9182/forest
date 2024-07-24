@@ -5,3 +5,5 @@ project(trees VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_executable(bst ./BinarySearchTree.cc)
+
+set_property(TARGET bst PROPERTY CXX_STANDARD 20)
